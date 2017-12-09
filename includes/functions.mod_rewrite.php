@@ -523,7 +523,16 @@ function mr_buildGeneratedCode($code)
         $sBaseUri = CEC_Hook::execute("Contenido.Frontend.BaseHrefGeneration", $sBaseUri);
 
         // IE hack with wrong base href interpretation
-        $code = preg_replace("/([\"|\'|=])upload\/(.?|.+?)([\"|\'|>])/ie", "stripslashes('\\1{$sBaseUri}upload/\\2\\3')", $code);
+        if (PHP_MAJOR_VERSION < 7) {
+            $code = preg_replace("/([\"|\'|=])upload\/(.?|.+?)([\"|\'|>])/ie", "stripslashes('\\1{$sBaseUri}upload/\\2\\3')", $code);
+        }
+        else {
+            $code = preg_replace_callback("/([\"|\'|=])upload\/(.?|.+?)([\"|\'|>])/i", function($m) {
+                return stripslashes($m[0]);
+                return stripslashes('\\1'.$m[0].'upload/\\2\\3');
+                return stripslashes('\\1{$sBaseUri}upload/\\2\\3');
+            }, $code);
+        }
 
         // define some preparations to replace /front_content.php & ./front_content.php
         // against front_content.php, because urls should start with front_content.php
